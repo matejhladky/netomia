@@ -1,13 +1,20 @@
 <script setup lang="ts">
 const isWaitlistOpen = ref(false)
 const isWaitlistSubmitted = ref(false)
+const isSubmitting = ref(false)
 const email = ref("")
+const feedbackMessage = ref("")
 const errorMessage = ref("")
 const modalRef = ref<HTMLElement | null>(null)
 const emailInputRef = ref<HTMLInputElement | null>(null)
 const lastFocusedElement = ref<HTMLElement | null>(null)
 
-const isEmailValid = computed(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim()))
+function resetWaitlistState() {
+  isWaitlistSubmitted.value = false
+  isSubmitting.value = false
+  feedbackMessage.value = ""
+  errorMessage.value = ""
+}
 
 function focusEmailInput() {
   nextTick(() => {
@@ -20,30 +27,46 @@ function openWaitlist() {
     ? document.activeElement
     : null
   isWaitlistOpen.value = true
-  isWaitlistSubmitted.value = false
-  errorMessage.value = ""
+  resetWaitlistState()
   focusEmailInput()
 }
 
 function closeWaitlist() {
   isWaitlistOpen.value = false
-  isWaitlistSubmitted.value = false
+  resetWaitlistState()
   email.value = ""
-  errorMessage.value = ""
   lastFocusedElement.value?.focus()
 }
 
-function submitWaitlist() {
-  if (!isEmailValid.value) {
-    errorMessage.value = email.value.trim()
-      ? "Enter a valid email address."
-      : "Enter your email address."
-    focusEmailInput()
+async function submitWaitlist() {
+  if (isSubmitting.value) {
     return
   }
 
+  isSubmitting.value = true
   errorMessage.value = ""
-  isWaitlistSubmitted.value = true
+
+  try {
+    await $fetch("/api/waitlist", {
+      method: "POST",
+      body: {
+        email: email.value,
+      },
+    })
+
+    feedbackMessage.value = "Thanks. We’ll reach out when there’s something worth sending."
+    isWaitlistSubmitted.value = true
+    email.value = ""
+  } catch (error) {
+    errorMessage.value = error instanceof Error && "data" in error
+      ? String((error as { data?: { statusMessage?: string } }).data?.statusMessage || error.message)
+      : error instanceof Error
+        ? error.message
+        : "Could not submit right now. Try again in a moment."
+    focusEmailInput()
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -82,17 +105,24 @@ function handleKeydown(event: KeyboardEvent) {
   }
 }
 
-watch(email, () => {
-  if (errorMessage.value && isEmailValid.value) {
-    errorMessage.value = ""
+watch(isWaitlistOpen, (isOpen) => {
+  if (!import.meta.client) {
+    return
   }
-})
 
-onMounted(() => {
-  window.addEventListener("keydown", handleKeydown)
+  if (isOpen) {
+    window.addEventListener("keydown", handleKeydown)
+    return
+  }
+
+  window.removeEventListener("keydown", handleKeydown)
 })
 
 onBeforeUnmount(() => {
+  if (!import.meta.client) {
+    return
+  }
+
   window.removeEventListener("keydown", handleKeydown)
 })
 </script>
@@ -131,17 +161,17 @@ onBeforeUnmount(() => {
       </p>
 
       <p class="copy copy-emphasis">
-       Completely free. 
+        Completely free.
       </p>
 
       <div class="actions">
-        <button type="button" class="button" @click="openWaitlist">
-          Join the waitlist
-        </button>
+        <NuxtLink to="/" class="button">
+          See the challenge &rarr;
+        </NuxtLink>
 
-        <p class="action-note">
-          Updates, releases, and early access.
-        </p>
+        <button type="button" class="text-link" @click="openWaitlist">
+          Join the waitlist for updates
+        </button>
       </div>
 
       <footer class="footer">
@@ -160,13 +190,15 @@ onBeforeUnmount(() => {
         @click.stop
       >
         <template v-if="!isWaitlistSubmitted">
-          <h2 id="waitlist-title" class="modal-title">Get updates</h2>
+          <h2 id="waitlist-title" class="modal-title">Join Netomia</h2>
           <p id="waitlist-description" class="modal-copy">
             Sign up to hear about updates, releases, and early access.
           </p>
 
           <form class="modal-form" @submit.prevent="submitWaitlist">
+            <label class="sr-only" for="waitlist-email">Enter your email</label>
             <input
+              id="waitlist-email"
               ref="emailInputRef"
               v-model="email"
               class="input"
@@ -174,24 +206,31 @@ onBeforeUnmount(() => {
               name="email"
               placeholder="Email address"
               autocomplete="email"
+              required
               :aria-invalid="errorMessage ? 'true' : 'false'"
-              aria-describedby="waitlist-feedback"
+              :aria-describedby="errorMessage ? 'waitlist-feedback' : undefined"
             />
 
-            <button type="submit" class="button button-submit">
-              Join
+            <button type="submit" class="button button-submit" :disabled="isSubmitting">
+              {{ isSubmitting ? "Joining..." : "Join" }}
             </button>
           </form>
 
-          <p id="waitlist-feedback" class="form-feedback" :class="{ 'form-feedback-visible': errorMessage }">
-            {{ errorMessage || "" }}
+          <p
+            v-if="errorMessage"
+            id="waitlist-feedback"
+            class="form-feedback form-feedback-error"
+            role="alert"
+            aria-live="polite"
+          >
+            {{ errorMessage }}
           </p>
         </template>
 
         <template v-else>
-          <h2 id="waitlist-title" class="modal-title">You're in.</h2>
+          <h2 id="waitlist-title" class="modal-title">You're in!</h2>
           <p id="waitlist-description" class="modal-copy">
-            Thanks. We’ll reach out when there’s something worth sending.
+            {{ feedbackMessage }}
           </p>
         </template>
       </div>
@@ -249,14 +288,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2.0rem;
-}
-
-.action-note {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.6;
+  gap: 1.15rem;
 }
 
 .divider {
@@ -281,8 +313,8 @@ onBeforeUnmount(() => {
 }
 
 .button,
-.text-link,
-.input {
+.input,
+.text-link {
   font: inherit;
 }
 
@@ -311,12 +343,21 @@ onBeforeUnmount(() => {
   padding: 0;
   border: 0;
   background: transparent;
-  color: var(--fg);
+  color: var(--fg-soft);
+  font-size: 0.95rem;
+  line-height: 1.5;
   text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.14em;
 }
 
 .text-link:hover {
-  text-underline-offset: 0.18em;
+  opacity: 0.82;
+}
+
+.button:disabled {
+  opacity: 0.68;
+  cursor: default;
 }
 
 .footer {
@@ -389,14 +430,32 @@ onBeforeUnmount(() => {
 
 .form-feedback {
   margin: 0.7rem 0 0;
-  min-height: 1.2rem;
   color: var(--muted-strong);
   font-size: 0.82rem;
   line-height: 1.45;
 }
 
-.form-feedback-visible {
+.form-note {
+  margin: 0.7rem 0 0;
+  color: var(--muted-strong);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.form-feedback-error {
   color: #e0b4aa;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (max-width: 640px) {

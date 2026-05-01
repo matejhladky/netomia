@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
 
   const formData = new FormData()
   formData.append("email", email)
-  formData.append("_subject", "New Netomia signup")
+  formData.append("_subject", "waitlist-signup")
   formData.append("source", "landing-modal")
 
   try {

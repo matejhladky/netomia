@@ -170,7 +170,7 @@ onBeforeUnmount(() => {
         </NuxtLink>
 
         <button type="button" class="text-link" @click="openWaitlist">
-          Join the waitlist for free scratch cards
+          Join the waitlist for updates
         </button>
       </div>
 

@@ -136,7 +136,7 @@ onBeforeUnmount(() => {
 
       <div class="actions">
         <button type="button" class="button" @click="openWaitlist">
-          Join the waitlist
+          Join the epic waitlist
         </button>
 
         <p class="action-note">

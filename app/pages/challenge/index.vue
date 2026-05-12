@@ -6,24 +6,28 @@ useSeoMeta({
 
 const isAiEngineeringWaitlistOpen = ref(false)
 
-/* Hero graphic: a token passes vertically through three weight
-   matrices. Each matrix's cells ripple with activation in sequence,
-   suggesting "this is the system being computed." */
+function pseudoRandom(seed: number) {
+  return ((seed * 9301 + 49297) % 233280) / 233280
+}
+
 const pipelineMatrices = computed(() => {
   const numMatrices = 3
   const cellsPerSide = 3
   const total = cellsPerSide * cellsPerSide
-  const startPad = 0.55
-  const matrixDuration = 1.3
+  const startPad = 0.5
+  const matrixDuration = 0.85
   return Array.from({ length: numMatrices }, (_, m) => ({
     id: m,
     cells: Array.from({ length: total }, (_, i) => {
       const r = Math.floor(i / cellsPerSide)
       const c = i % cellsPerSide
-      const delay = startPad + m * matrixDuration + (r + c) * 0.07
+      const delay = startPad + m * matrixDuration + (r + c) * 0.05
+      const intensitySeed = pseudoRandom(m * 31 + i * 137)
+      const intensity = intensitySeed < 0.34 ? "low" : intensitySeed < 0.68 ? "mid" : "high"
       return {
         id: `${m}-${i}`,
         delay: delay.toFixed(2),
+        intensity,
       }
     }),
   }))
@@ -31,19 +35,21 @@ const pipelineMatrices = computed(() => {
 </script>
 
 <template>
+  <header class="page-header" aria-label="Document metadata">
+    <div class="ph-inner">
+      <NuxtLink to="/" class="ph-brand">netomia<span class="brand-dot">.</span></NuxtLink>
+      <span class="ph-divider" aria-hidden="true">/</span>
+      <span class="ph-path">challenge/deep-llm-foundations</span>
+      <span class="ph-spacer"></span>
+      <span class="ph-status">
+        <span class="ph-status-dot" aria-hidden="true"></span>
+        BETA · v0.1
+      </span>
+    </div>
+  </header>
+
   <main class="page">
     <section class="hero">
-      <NuxtLink to="/" class="back-link">
-        netomia<span class="brand-dot">.</span>
-      </NuxtLink>
-
-      <div class="hero-status">
-        <span class="status-badge">
-          <span class="status-dot" aria-hidden="true"></span>
-          BETA
-        </span>
-      </div>
-
       <div class="hero-grid">
         <div class="hero-text">
           <h1 class="title">
@@ -58,6 +64,15 @@ const pipelineMatrices = computed(() => {
           <p class="intro">
             20 hours is enough to learn most skills reasonably well, but most people take years to start the first one.
           </p>
+
+          <div class="hero-actions">
+            <a href="#join" class="hero-action hero-action-primary">Join the challenge</a>
+            <a href="#how-it-works" class="hero-action hero-action-ghost">
+              See how it works
+              <span class="hero-action-icon" aria-hidden="true">↓</span>
+            </a>
+          </div>
+
           <p class="intro">
             We built this challenge for ourselves — after seeing great results, we decided to share it with others for free.
           </p>
@@ -72,7 +87,7 @@ const pipelineMatrices = computed(() => {
                 <span
                   v-for="cell in m.cells"
                   :key="cell.id"
-                  class="pipe-cell"
+                  :class="['pipe-cell', `pipe-cell-${cell.intensity}`]"
                   :style="{ animationDelay: `${cell.delay}s` }"
                 />
               </div>
@@ -90,7 +105,7 @@ const pipelineMatrices = computed(() => {
         <h2 class="panel-title">Build real intuition for how modern LLMs work from scratch.</h2>
 
         <p class="panel-copy">
-          A free, self-directed 20-hour challenge. You study and implement the core mechanics behind modern LLMs — so you can build, reason clearly, and test new ideas.
+          You'll study and implement the core mechanics behind modern LLMs — so you can build, reason clearly, and test new ideas.
         </p>
 
         <div class="transformation">
@@ -116,10 +131,11 @@ const pipelineMatrices = computed(() => {
           It is not about <button
             type="button"
             class="inline-link"
+            title="AI engineering challenge — coming soon"
             @click="isAiEngineeringWaitlistOpen = true"
-          >agents, MCP, RAG pipelines, prompt patterns</button>, or memorizing definitions for a quiz.
+          >agents, MCP, RAG pipelines, prompt patterns<span class="inline-link-icon" aria-hidden="true">↗</span></button>, or memorizing definitions for a quiz.
           This challenge is about the foundations: theory and implementation. You'll study and
-          build concepts from scratch to develop real intuition for how modern LLMs work. 
+          build concepts from scratch to develop real intuition for how modern LLMs work.
         </p>
       </article>
 
@@ -128,7 +144,7 @@ const pipelineMatrices = computed(() => {
         <h2 class="panel-title">For curious people who <em>want</em> to go deep.</h2>
 
         <ul class="traits">
-          <li>You want to go past tools and APIs into the actual mechanics: self-attention, embeddings, KV cache, RoPE, LoRA, quantization, ...</li>
+          <li>You want to go past tools and APIs into the actual mechanics: self-attention, embeddings, KV cache, RoPE, LoRA, quantization, and more.</li>
           <li>You're willing to sit with ambiguity and push through the effort of figuring things out yourself.</li>
           <li>You've got some baseline in programming, maths, and ML — even rough. You'll fill the gaps as you go.</li>
         </ul>
@@ -158,7 +174,7 @@ const pipelineMatrices = computed(() => {
             <h3 class="step-label">Plan</h3>
             <p class="step-copy">
               We help you deconstruct the target into the key areas to explore, and share a
-              roadmap of resources & tips that worked for us and for previous learners.
+              roadmap of resources and tips that worked for us and for previous learners.
             </p>
           </article>
 
@@ -166,7 +182,7 @@ const pipelineMatrices = computed(() => {
             <p class="step-number">03</p>
             <h3 class="step-label">Work</h3>
             <p class="step-copy">
-              You spend 20 hours studying, learning, and building - at your own pace.
+              You spend 20 hours studying, learning, and building — at your own pace.
               We're available for support throughout.
             </p>
           </article>
@@ -195,19 +211,20 @@ const pipelineMatrices = computed(() => {
         Understand modern LLMs from first principles.
       </h2>
 
+      <p class="cta-subtitle">
+        Start today. Just 20 hours of real work gets you ahead. Not 200 hours of intention.
+      </p>
+
       <div class="cta-actions">
         <button type="button" class="button cta-button">
           Join the free challenge
           <span class="cta-arrow" aria-hidden="true">→</span>
         </button>
-      </div>
-
-      <p class="cta-link">
-        <a href="mailto:hello@netomia.com">
+        <a class="cta-questions" href="mailto:hello@netomia.com">
           Questions? Contact us
           <span class="cta-link-icon" aria-hidden="true">↗</span>
         </a>
-      </p>
+      </div>
     </section>
 
     <WaitlistModal
@@ -221,6 +238,86 @@ const pipelineMatrices = computed(() => {
 </template>
 
 <style scoped>
+/* ═════════════════════════════════════════════════════════════════ */
+/* Top metadata strip — fixed header bar above all content.           */
+/* Reframes the page as a technical document, not a marketing page.   */
+/* ═════════════════════════════════════════════════════════════════ */
+
+.page-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 42px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  z-index: 40;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.ph-inner {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 1.6rem;
+  gap: 0.7rem;
+  width: 100%;
+}
+
+.ph-brand {
+  color: var(--fg-soft);
+  text-decoration: none;
+  transition: color 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.ph-brand:hover {
+  color: var(--fg);
+}
+
+.ph-divider {
+  color: var(--border);
+}
+
+.ph-path {
+  color: var(--muted-strong);
+}
+
+.ph-spacer {
+  flex: 1;
+}
+
+.ph-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted-strong);
+}
+
+.ph-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted-strong);
+  animation: ph-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes ph-pulse {
+  0%, 100% {
+    background: var(--muted-strong);
+    transform: scale(1);
+  }
+  50% {
+    background: var(--fg);
+    transform: scale(1.2);
+  }
+}
+
+.page {
+  padding-top: 5.5rem;
+}
+
 .hero,
 .overview,
 .cta {
@@ -229,23 +326,11 @@ const pipelineMatrices = computed(() => {
 }
 
 .overview {
-  margin-top: 2.6rem;
+  margin-top: 3.5rem;
 }
 
 .cta {
-  margin-top: 5rem;
-}
-
-.back-link {
-  display: inline-block;
-  color: var(--muted);
-  font-size: 0.92rem;
-  text-decoration: none;
-  font: inherit;
-}
-
-.back-link:hover {
-  opacity: 0.82;
+  margin-top: 2.5rem;
 }
 
 .title {
@@ -256,7 +341,7 @@ const pipelineMatrices = computed(() => {
 
 .title-prefix {
   display: block;
-  font-size: clamp(1.4rem, 2.6vw, 1.8rem);
+  font-size: clamp(1.3rem, 2.4vw, 1.6rem);
   color: var(--fg-soft);
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -264,7 +349,7 @@ const pipelineMatrices = computed(() => {
 
 .title-topic {
   display: block;
-  margin-top: 0.5rem;
+  margin-top: 0.85rem;
   font-size: clamp(2.6rem, 7.5vw, 4.4rem);
   color: var(--fg);
   letter-spacing: -0.05em;
@@ -292,13 +377,10 @@ const pipelineMatrices = computed(() => {
   display: grid;
   grid-template-columns: 3rem 1fr;
   column-gap: 1.5rem;
-  padding: 3.2rem 0 3.4rem;
+  padding: 4.2rem 0 4.4rem;
   border-top: 1px solid var(--border);
 }
 
-.panel:last-child {
-  border-bottom: 1px solid var(--border);
-}
 
 .panel > :not(.panel-number) {
   grid-column: 2;
@@ -311,12 +393,13 @@ const pipelineMatrices = computed(() => {
   color: var(--muted-strong);
   font-size: 0.82rem;
   letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
 }
 
 .panel-title,
 .section-title {
   margin: 0;
-  font-size: clamp(1.45rem, 4vw, 2rem);
+  font-size: clamp(1.5rem, 4.2vw, 2.2rem);
   font-weight: 400;
   line-height: 1.12;
   letter-spacing: -0.05em;
@@ -332,9 +415,15 @@ const pipelineMatrices = computed(() => {
 }
 
 .panel-copy {
+  max-width: 42rem;
   margin: 1rem 0 0;
   color: var(--muted);
   line-height: 1.76;
+}
+
+.traits + .panel-copy,
+.steps-grid + .panel-copy {
+  margin-top: 2.4rem;
 }
 
 .panel-title + .panel-copy {
@@ -351,17 +440,37 @@ const pipelineMatrices = computed(() => {
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 0.18em;
-  transition: color 150ms ease;
+  transition: color 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .inline-link:hover {
   color: var(--fg-soft);
 }
 
+.inline-link:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 3px;
+}
+
+.inline-link-icon {
+  display: inline-block;
+  margin-left: 0.15em;
+  font-size: 0.95em;
+  line-height: 1;
+  opacity: 0.65;
+  text-decoration: none;
+  transform: translateY(-0.08em);
+  transition: opacity 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.inline-link:hover .inline-link-icon {
+  opacity: 1;
+}
+
 .transformation {
   display: flex;
   align-items: stretch;
-  gap: 1rem;
+  gap: 1.3rem;
   margin-top: 1.8rem;
 }
 
@@ -387,137 +496,181 @@ const pipelineMatrices = computed(() => {
   align-self: center;
   flex: 0 0 auto;
   color: var(--fg);
-  font-size: 1.5rem;
-}
-
-/* ─── Hero two-column layout ────────────────────────────────────── */
-/* The entire hero content (title + intros + graphic) sits in a 2-col */
-/* grid below the back-link. Both columns share the same top baseline */
-/* — the title and the graphic's first token start at the same line.  */
-/* Text column flexes, graphic column is auto-sized. On mobile, the   */
-/* grid collapses to a single column.                                 */
-
-.hero-status {
-  margin-top: 3.2rem;
-}
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.22rem 0.6rem 0.2rem;
-  border: 1px solid var(--border);
-  color: var(--muted-strong);
-  font-size: 0.7rem;
-  letter-spacing: 0.18em;
+  font-size: 1.9rem;
   line-height: 1;
 }
 
-.status-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--muted-strong);
-  animation: status-pulse 2.6s ease-in-out infinite;
-}
-
-@keyframes status-pulse {
-  0%, 100% {
-    background: var(--muted-strong);
-    transform: scale(1);
-  }
-  50% {
-    background: var(--fg);
-    transform: scale(1.15);
-  }
-}
 
 .hero-grid {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 4rem;
   align-items: start;
-  margin-top: 0.9rem;
 }
 
 .hero-text {
   min-width: 0;
 }
 
-.hero-text .intro-strong {
-  margin-top: 2.4rem;
-}
-
 .hero-text .intro {
   margin-top: 1rem;
 }
 
-.hero-text .intro-strong + .intro {
+.hero-text .intro.intro-strong {
+  margin-top: 3rem;
+}
+
+.hero-text .intro.intro-strong + .intro {
   margin-top: 2.8rem;
 }
 
 .hero-graphic {
-  /* Optical alignment: nudge down a hair so the first token's vertical
-     center lands on the cap-height of the title-prefix's first line. */
   padding-top: 0.55rem;
 }
 
-/* ─── Pipeline animation (vertical) ─────────────────────────────── */
-/* A token enters at the top, passes vertically through three weight  */
-/* matrices, and exits at the bottom. Each matrix's cells ripple with */
-/* activation as the token is being processed. ~7s cycle.             */
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 2.6rem 0 1.2rem;
+}
+
+.hero-actions + .intro {
+  margin-top: 1.2rem;
+  font-size: 0.9rem;
+  color: var(--muted-strong);
+  line-height: 1.65;
+}
+
+.hero-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.78rem 1.3rem;
+  font: inherit;
+  font-size: 0.94rem;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid var(--fg);
+  background: transparent;
+  color: var(--fg);
+  transition:
+    background 200ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 200ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    color 200ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    opacity 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.hero-action-primary {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.hero-action-primary:hover {
+  opacity: 0.86;
+}
+
+.hero-action-ghost {
+  border-color: var(--border);
+  color: var(--fg-soft);
+}
+
+.hero-action-ghost:hover {
+  border-color: var(--fg);
+  color: var(--fg);
+}
+
+.hero-action-icon {
+  display: inline-block;
+  transition: transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.hero-action-ghost:hover .hero-action-icon {
+  transform: translateY(3px);
+}
+
+.hero-action:focus-visible {
+  outline: 2px solid var(--fg);
+  outline-offset: 2px;
+}
 
 .anim-pipe {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.7rem;
 }
 
 .pipe-endpoint {
-  width: 22px;
-  height: 22px;
+  width: 32px;
+  height: 32px;
   background: var(--border);
-  animation: pipe-endpoint 7s ease-in-out infinite;
+  animation: pipe-endpoint 5s ease-in-out infinite;
 }
 
 .pipe-start { animation-delay: 0s; }
-.pipe-end { animation-delay: 5.4s; }
+.pipe-end { animation-delay: 2.8s; }
 
 @keyframes pipe-endpoint {
-  0%, 12%, 100% { background: var(--border); }
-  3%, 9% { background: var(--fg); }
+  0%, 26%, 100% { background: var(--border); }
+  6%, 18% { background: var(--fg); }
 }
 
 .pipe-arrow {
   color: var(--muted-strong);
-  font-size: 1rem;
+  font-size: 1.2rem;
   line-height: 1;
 }
 
 .pipe-matrix {
   display: grid;
-  grid-template-columns: repeat(3, 16px);
-  grid-template-rows: repeat(3, 16px);
-  gap: 3px;
-  padding: 4px;
+  grid-template-columns: repeat(3, 24px);
+  grid-template-rows: repeat(3, 24px);
+  gap: 4px;
+  padding: 5px;
   border: 1px solid var(--border);
 }
 
 .pipe-cell {
-  width: 16px;
-  height: 16px;
+  width: 24px;
+  height: 24px;
   background: var(--border);
-  animation: pipe-cell 7s ease-in-out infinite;
+  animation-duration: 5s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
 
-@keyframes pipe-cell {
+.pipe-cell-low {
+  animation-name: pipe-cell-low;
+}
+
+.pipe-cell-mid {
+  animation-name: pipe-cell-mid;
+}
+
+.pipe-cell-high {
+  animation-name: pipe-cell-high;
+}
+
+@keyframes pipe-cell-low {
+  0%, 26%, 100% { background: var(--border); }
+  6%, 18% { background: var(--muted-strong); }
+}
+
+@keyframes pipe-cell-mid {
   0%, 26%, 100% { background: var(--border); }
   6%, 18% { background: var(--fg-soft); }
 }
 
+@keyframes pipe-cell-high {
+  0%, 26%, 100% { background: var(--border); }
+  6%, 18% { background: var(--fg); }
+}
+
 .traits {
   list-style: none;
+  max-width: 42rem;
   margin: 1.7rem 0 0;
   padding: 0;
 }
@@ -546,12 +699,13 @@ const pipelineMatrices = computed(() => {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
-  margin-top: 2.3rem;
+  margin-top: 2rem;
 }
 
 .step-card {
   padding: 1.8rem 2rem 2.2rem;
   border: 1px solid var(--border);
+  background: var(--bg-soft);
 }
 
 .step-number {
@@ -559,6 +713,7 @@ const pipelineMatrices = computed(() => {
   color: var(--muted-strong);
   font-size: 0.82rem;
   letter-spacing: 0.12em;
+  font-variant-numeric: tabular-nums;
 }
 
 .step-label {
@@ -593,20 +748,29 @@ const pipelineMatrices = computed(() => {
 
 .cta-headline {
   margin: 1.2rem 0 0;
-  max-width: 36ch;
   color: var(--fg);
   font-size: clamp(1.8rem, 4.5vw, 2.6rem);
   font-weight: 400;
   line-height: 1.18;
   letter-spacing: -0.02em;
-  text-wrap: balance;
+  text-wrap: pretty;
+}
+
+.cta-subtitle {
+  margin: 1.2rem 0 0;
+  max-width: 42rem;
+  color: var(--muted);
+  font-size: 0.96rem;
+  line-height: 1.7;
+  text-wrap: pretty;
 }
 
 .cta-actions {
   display: flex;
   align-items: center;
-  gap: 0.9rem;
-  margin-top: 2.4rem;
+  flex-wrap: wrap;
+  gap: 1.4rem;
+  margin-top: 2rem;
 }
 
 .cta-button {
@@ -620,46 +784,83 @@ const pipelineMatrices = computed(() => {
 
 .cta-arrow {
   display: inline-block;
-  transition: transform 150ms ease;
+  transition: transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .cta-button:hover .cta-arrow {
-  transform: translateX(2px);
+  transform: translateX(3px);
 }
 
-.cta-link {
-  margin: 1.5rem 0 0;
-  color: var(--muted);
-  font-size: 0.92rem;
-}
-
-.cta-link a {
+.cta-questions {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  color: inherit;
+  color: var(--muted);
+  font-size: 0.92rem;
   text-decoration: none;
   border-bottom: 1px solid transparent;
-  transition: color 150ms ease, border-color 150ms ease;
+  transition:
+    color 200ms cubic-bezier(0.2, 0.7, 0.2, 1),
+    border-color 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-.cta-link a:hover {
+.cta-questions:hover {
   color: var(--fg-soft);
   border-bottom-color: currentColor;
 }
 
 .cta-link-icon {
-  font-size: 0.9em;
-  opacity: 0.8;
+  display: inline-block;
+  margin-left: 0.1em;
+  font-size: 0.95em;
+  line-height: 1;
+  opacity: 0.7;
+  transform: translateY(-0.08em);
+}
+
+#join:target {
+  animation: target-flash-cta 1.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+#how-it-works:target .panel-title {
+  animation: target-flash-title 1.8s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@keyframes target-flash-cta {
+  0%, 30% { border-color: var(--border); }
+  40%, 55% { border-color: var(--fg); }
+  100% { border-color: var(--border); }
+}
+
+@keyframes target-flash-title {
+  0%, 30% { color: var(--fg-soft); }
+  40%, 55% { color: var(--fg); }
+  100% { color: var(--fg-soft); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #join:target,
+  #how-it-works:target .panel-title {
+    animation: none;
+  }
 }
 
 @media (max-width: 640px) {
+  .ph-inner {
+    padding: 0 1rem;
+  }
+
+  .ph-path,
+  .ph-divider {
+    display: none;
+  }
+
   .overview {
-    margin-top: 2rem;
+    margin-top: 2.6rem;
   }
 
   .cta {
-    margin-top: 3.6rem;
+    margin-top: 1.8rem;
     padding: 1.8rem 1.3rem 2rem;
   }
 
@@ -673,21 +874,33 @@ const pipelineMatrices = computed(() => {
 
   .title-topic {
     font-size: clamp(2rem, 9vw, 3rem);
-    margin-top: 0.4rem;
+    margin-top: 0.65rem;
   }
 
   .intro {
     margin-top: 1.4rem;
   }
 
-  .hero-text .intro-strong {
-    margin-top: 1.8rem;
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+    margin: 2rem 0;
+  }
+
+  .hero-action {
+    justify-content: center;
+    padding: 0.85rem 1.2rem;
+  }
+
+  .hero-text .intro.intro-strong {
+    margin-top: 2.2rem;
     font-size: 1.08rem;
   }
 
   .panel {
     display: block;
-    padding: 2.4rem 0 2.6rem;
+    padding: 3rem 0 3.2rem;
   }
 
   .panel-number {

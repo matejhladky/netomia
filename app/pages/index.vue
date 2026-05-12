@@ -12,7 +12,7 @@ const isWaitlistOpen = ref(false)
       </p>
 
       <p class="copy">
-        Most online education built for convenience: fast, entertaining, easy to consume.
+        Most online education is built for convenience: fast, entertaining, easy to consume.
         It feels productive, but it rarely leads to true understanding.
       </p>
 

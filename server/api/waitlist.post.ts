@@ -1,7 +1,8 @@
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event)
-  const body = await readBody<{ email?: string }>(event)
+  const body = await readBody<{ email?: string; source?: string }>(event)
   const email = body.email?.trim() || ""
+  const source = body.source?.trim() || "landing-modal"
 
   if (!email) {
     throw createError({
@@ -29,7 +30,7 @@ export default defineEventHandler(async (event) => {
   const formData = new FormData()
   formData.append("email", email)
   formData.append("_subject", "waitlist-signup")
-  formData.append("source", "landing-modal")
+  formData.append("source", source)
 
   try {
     const response = await fetch(config.waitlistProviderUrl, {

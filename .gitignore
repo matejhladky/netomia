@@ -23,3 +23,6 @@ archive/
 # Local env files
 .env
 .env.*
+docs/netomia-context.md
+AGENTS.md
+Netomia content recovery.md
